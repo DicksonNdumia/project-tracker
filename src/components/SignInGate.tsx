@@ -1,9 +1,30 @@
 import React from 'react';
-import { ArrowRight, CheckSquare, Flame, GitBranch, Layers } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckSquare,
+  ExternalLink,
+  Flame,
+  GitBranch,
+  Layers,
+  Loader2,
+  RefreshCw,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const SignInGate: React.FC = () => {
-  const { signInWithGoogle, authError } = useAuth();
+  const {
+    signInWithGoogle,
+    signInWithGoogleRedirect,
+    resetServiceWorkersAndReload,
+    signingIn,
+    authError,
+    authErrorCode,
+    networkHint,
+  } = useAuth();
+
+  const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+  const isNetworkError = authErrorCode === 'auth/network-request-failed';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex items-center justify-center p-4 sm:p-8">
@@ -63,16 +84,66 @@ export const SignInGate: React.FC = () => {
 
           <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
             {authError && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-xs text-red-700 dark:text-red-300">
-                {authError}
+              <div className="mb-4 p-3.5 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-xs text-red-700 dark:text-red-300 space-y-2">
+                <div className="flex items-start gap-2 font-medium">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{authError}</span>
+                </div>
+                {networkHint && (
+                  <p className="text-red-600/90 dark:text-red-300/90 leading-relaxed pl-6">
+                    {networkHint}
+                  </p>
+                )}
+                {isNetworkError && (
+                  <div className="pl-6 pt-1 flex flex-wrap items-center gap-2">
+                    {!isInIframe ? (
+                      <button
+                        type="button"
+                        onClick={signInWithGoogleRedirect}
+                        disabled={signingIn}
+                        className="px-2.5 py-1 rounded bg-red-600 text-white hover:bg-red-500 font-medium inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                      >
+                        <span>Use Redirect Sign-In</span>
+                      </button>
+                    ) : (
+                      <a
+                        href={typeof window !== 'undefined' ? window.location.href : '/'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1 rounded bg-red-600 text-white hover:bg-red-500 font-medium inline-flex items-center gap-1"
+                      >
+                        <span>Open in New Tab</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={resetServiceWorkersAndReload}
+                      className="px-2.5 py-1 rounded border border-red-300 dark:border-red-700 text-red-700 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/40 font-medium inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      <span>Clear Cache &amp; Reload</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             <button
               onClick={signInWithGoogle}
-              className="w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-lg bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-medium text-sm hover:bg-slate-800 dark:hover:bg-emerald-400 transition-colors cursor-pointer"
+              disabled={signingIn}
+              className="w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-lg bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-medium text-sm hover:bg-slate-800 dark:hover:bg-emerald-400 transition-colors cursor-pointer disabled:opacity-60"
             >
-              <span>Sign in with Google</span>
-              <ArrowRight className="w-4 h-4" />
+              {signingIn ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Connecting to Google...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign in with Google</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
             <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
               Private workspace backed by PostgreSQL with per-user access isolation.
