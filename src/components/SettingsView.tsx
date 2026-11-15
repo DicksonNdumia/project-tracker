@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Download, FileSpreadsheet, FileText, Moon, Sun, Upload } from 'lucide-react';
+import { Check, Copy, Download, FileSpreadsheet, FileText, Moon, Sun, Upload } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../lib/api';
 import { exportWorkspacePdf } from '../lib/exportPdf';
@@ -26,6 +26,7 @@ export const SettingsView: React.FC = () => {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [dataMsg, setDataMsg] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
+  const [copiedSlug, setCopiedSlug] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -198,8 +199,37 @@ export const SettingsView: React.FC = () => {
                 type="text"
                 value={portfolioSlug}
                 onChange={(e) => setPortfolioSlug(e.target.value)}
+                placeholder="my-app"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm font-mono"
               />
+              {(() => {
+                const sanitized =
+                  portfolioSlug
+                    .toLowerCase()
+                    .replace(/[^a-z0-9-]+/g, '-')
+                    .replace(/(^-|-$)/g, '') || 'your-slug';
+                const fullUrl =
+                  typeof window !== 'undefined'
+                    ? `${window.location.origin}/?portfolio=${sanitized}`
+                    : `/?portfolio=${sanitized}`;
+                return (
+                  <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] text-slate-500">
+                    <span className="font-mono truncate">{fullUrl}</span>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await navigator.clipboard?.writeText(fullUrl);
+                        setCopiedSlug(true);
+                        setTimeout(() => setCopiedSlug(false), 2000);
+                      }}
+                      className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 hover:underline shrink-0 cursor-pointer"
+                    >
+                      {copiedSlug ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedSlug ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
           </div>
           <div>

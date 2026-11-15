@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Check,
   CheckSquare,
+  Copy,
   Edit3,
   ExternalLink,
   Eye,
@@ -77,6 +78,7 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
   const [lessonsLearned, setLessonsLearned] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Detail sub-forms
   const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
@@ -963,15 +965,34 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {profile?.portfolioSlug && (
-            <button
-              onClick={() => onPreviewPublicPortfolio(profile.portfolioSlug!)}
-              className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium inline-flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-            >
-              <Globe className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Public Portfolio Mode</span>
-            </button>
+            <>
+              <button
+                onClick={async () => {
+                  const url = `${window.location.origin}/?portfolio=${encodeURIComponent(profile.portfolioSlug!)}`;
+                  await navigator.clipboard?.writeText(url);
+                  setCopiedLink(true);
+                  setTimeout(() => setCopiedLink(false), 2000);
+                }}
+                className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium inline-flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                title={`Copy public URL: ?portfolio=${profile.portfolioSlug}`}
+              >
+                {copiedLink ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+                <span>{copiedLink ? 'Copied!' : 'Copy Share Link'}</span>
+              </button>
+              <button
+                onClick={() => onPreviewPublicPortfolio(profile.portfolioSlug!)}
+                className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium inline-flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                <Globe className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Public Portfolio Mode</span>
+              </button>
+            </>
           )}
           <button
             onClick={() => openEditor(null)}

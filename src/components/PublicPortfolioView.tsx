@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ExternalLink, FolderKanban, Github } from 'lucide-react';
+import { ArrowLeft, Check, Copy, ExternalLink, FolderKanban, Github } from 'lucide-react';
 import { ProjectItem } from '../types';
 
 interface PublicPortfolioViewProps {
@@ -21,10 +21,24 @@ export const PublicPortfolioView: React.FC<PublicPortfolioViewProps> = ({ slug, 
   const [data, setData] = useState<PublicPortfolioResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const cleanSlug = slug.replace(/^<|>$/g, '').trim().toLowerCase();
+  const shareUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/?portfolio=${encodeURIComponent(data?.owner.portfolioSlug || cleanSlug)}`
+      : '';
+
+  const handleCopyShareUrl = async () => {
+    if (!shareUrl || !navigator.clipboard) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/projects/public/${encodeURIComponent(slug)}`)
+    fetch(`/api/projects/public/${encodeURIComponent(cleanSlug)}`)
       .then(async (res) => {
         if (!res.ok) throw new Error('Portfolio not found.');
         return res.json();
@@ -34,7 +48,7 @@ export const PublicPortfolioView: React.FC<PublicPortfolioViewProps> = ({ slug, 
         setError(err instanceof Error ? err.message : 'Unable to load portfolio.')
       )
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [cleanSlug]);
 
   if (loading) {
     return (
@@ -48,10 +62,14 @@ export const PublicPortfolioView: React.FC<PublicPortfolioViewProps> = ({ slug, 
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
         <div className="text-sm font-medium">{error || 'Portfolio unavailable'}</div>
+        <p className="mt-1.5 text-xs text-slate-500 max-w-md">
+          Make sure the URL uses your saved portfolio slug without angle brackets, for example:{' '}
+          <code className="font-mono text-emerald-600 dark:text-emerald-400">?portfolio=my-slug</code>
+        </p>
         {onExit && (
           <button
             onClick={onExit}
-            className="mt-4 px-4 py-2 rounded-lg bg-slate-900 text-white text-xs cursor-pointer"
+            className="mt-4 px-4 py-2 rounded-lg bg-slate-900 dark:bg-emerald-600 text-white text-xs cursor-pointer"
           >
             Return to Workspace
           </button>
@@ -63,7 +81,7 @@ export const PublicPortfolioView: React.FC<PublicPortfolioViewProps> = ({ slug, 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
           <div className="flex items-center gap-4">
             <img
               src={data.owner.avatarUrl || '/src/assets/images/avatar_developer_default_1794680297404.jpg'}
@@ -78,15 +96,28 @@ export const PublicPortfolioView: React.FC<PublicPortfolioViewProps> = ({ slug, 
               </p>
             </div>
           </div>
-          {onExit && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={onExit}
+              onClick={handleCopyShareUrl}
               className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium inline-flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Workspace</span>
+              {copied ? (
+                <Check className="w-3.5 h-3.5 text-emerald-500" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )}
+              <span>{copied ? 'Copied Link' : 'Copy Portfolio Link'}</span>
             </button>
-          )}
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium inline-flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Workspace</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {data.projects.length === 0 ? (

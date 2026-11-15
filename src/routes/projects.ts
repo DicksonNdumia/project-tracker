@@ -27,7 +27,7 @@ function slugify(value: string) {
 // Public portfolio endpoint (no auth required, returns strictly isPublic = true projects)
 router.get('/public/:slug', async (req, res) => {
   try {
-    const slug = String(req.params.slug);
+    const slug = String(req.params.slug).replace(/^<|>$/g, '').trim().toLowerCase();
     const [owner] = await db
       .select({
         id: users.id,

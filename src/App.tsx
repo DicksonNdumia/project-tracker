@@ -527,7 +527,12 @@ const AppShell: React.FC = () => {
               globalSearch={globalSearch}
               refreshTrigger={refreshTrigger}
               onProjectsChanged={bumpRefresh}
-              onPreviewPublicPortfolio={(slug) => setPreviewPortfolioSlug(slug)}
+              onPreviewPublicPortfolio={(slug) => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('portfolio', slug);
+                window.history.replaceState({}, '', url.toString());
+                setPreviewPortfolioSlug(slug);
+              }}
             />
           )}
           {activeTab === 'learning' && (
