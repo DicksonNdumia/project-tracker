@@ -1,0 +1,6 @@
+{
+  "name": "Progress Tracker",
+  "description": "Personal productivity, streak consistency, GitHub activity, project portfolio, and developer growth command center.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
